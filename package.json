@@ -1,0 +1,39 @@
+{
+  "name": "@rsksmart/rns-resolver.js",
+  "version": "1.0.0",
+  "description": "RNS Resolver",
+  "main": "lib/index.js",
+  "files": ["lib"],
+  "scripts": {
+    "ganache": "npx ganache-cli",
+    "compile": "npx truffle compile",
+    "build": "npx tsc",
+    "test": "npx jest",
+    "lint": "npx eslint src/ test/ --ext .js,.jsx,.ts,.tsx"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rns-resolver.js"
+  },
+  "keywords": [
+    "rsk",
+    "rif",
+    "rns"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@rsksmart/rns-registry": "^1.0.4",
+    "@rsksmart/rns-resolver": "^2.0.0",
+    "@types/jest": "^26.0.20",
+    "@typescript-eslint/eslint-plugin": "^4.18.0",
+    "@typescript-eslint/parser": "^4.18.0",
+    "eslint": "^7.22.0",
+    "ganache-cli": "^6.12.2",
+    "jest": "^26.6.3",
+    "truffle": "^5.2.4",
+    "ts-jest": "^26.5.3",
+    "typescript": "^4.2.3",
+    "web3": "^1.2.9"
+  }
+}
