@@ -11,7 +11,9 @@
     "compile": "npx truffle compile",
     "build": "npx tsc",
     "test": "npx jest",
-    "lint": "npx eslint src/ test/ --ext .js,.jsx,.ts,.tsx"
+    "test:ci": "npx jest --coverage",
+    "lint": "npx eslint src/ test/ --ext .js,.jsx,.ts,.tsx",
+    "lint:ci": "npx eslint src/ test/ --ext .js,.jsx,.ts,.tsx --format html --output-file ./coverage/eslint.html"
   },
   "repository": {
     "type": "git",

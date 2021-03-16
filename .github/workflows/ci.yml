@@ -20,5 +20,9 @@ jobs:
     - run: npm i
     - run: npm run ganache &
     - run: npm run compile
-    - run: npm test
-    - run: npm run lint
+    - run: npm test:ci
+    - run: npm run lint:ci
+    - name: Coveralls
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
