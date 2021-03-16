@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "RNS Resolver",
   "main": "lib/index.js",
-  "files": ["lib"],
+  "files": [
+    "lib"
+  ],
   "scripts": {
     "ganache": "npx ganache-cli",
     "compile": "npx truffle compile",
