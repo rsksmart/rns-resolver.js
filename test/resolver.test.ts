@@ -7,9 +7,9 @@ import Resolver from '../src'
 import { hash as namehash } from 'eth-ens-namehash'
 import nodeFetch from 'node-fetch'
 
-const deployRNS = async (web3: Web3): Promise<Contract> => {
-  const contract = new web3.eth.Contract(RNS.abi as AbiItem[])
-  const deployer = contract.deploy({ data: RNS.bytecode })
+const deployContract = async (web3: Web3, abi: AbiItem[], bytecode: string): Promise<Contract> => {
+  const contract = new web3.eth.Contract(abi)
+  const deployer = contract.deploy({ data: bytecode })
 
   const from = web3.eth.defaultAccount as string
 
@@ -21,19 +21,8 @@ const deployRNS = async (web3: Web3): Promise<Contract> => {
   )
 }
 
-const deployResolver = async (web3: Web3): Promise<Contract> => {
-  const contract = new web3.eth.Contract(AddrResolver.abi as AbiItem[])
-  const deployer = contract.deploy({ data: AddrResolver.bytecode })
-
-  const from = web3.eth.defaultAccount as string
-
-  const gas = await deployer.estimateGas({ from })
-
-  return new Promise((resolve, reject) => deployer.send({ from, gas })
-    .on('error', (error: Error) => reject(error))
-    .then((newContractInstance: Contract) => resolve(newContractInstance))
-  )
-}
+const deployRNS = async (web3: Web3): Promise<Contract> => deployContract(web3, RNS.abi as AbiItem[], RNS.bytecode)
+const deployResolver = async (web3: Web3): Promise<Contract> => deployContract(web3, AddrResolver.abi as AbiItem[], AddrResolver.bytecode)
 
 describe('resolver', function (this: {
   rnsContract: Contract,
