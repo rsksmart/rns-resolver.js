@@ -6,9 +6,7 @@ describe('mainnet', function(this: {
   resolver: Resolver
 }) {
   beforeAll(() => {
-    this.resolver = new Resolver({
-      registryAddress: '0xcb868aeabd31e2b66f74e9a55cf064abb31a4ad5',
-      rpcUrl: 'https://public-node.rsk.co',
+    this.resolver = Resolver.forRskMainnet({
       fetch: nodeFetch
     })
   })
@@ -24,9 +22,7 @@ describe('testnet', function(this: {
   resolver: Resolver
 }) {
   beforeAll(() => {
-    this.resolver = new Resolver({
-      registryAddress: '0x7d284aaac6e925aad802a53c0c69efe3764597b8',
-      rpcUrl: 'https://public-node.testnet.rsk.co',
+    this.resolver = Resolver.forRskTestnet({
       fetch: nodeFetch
     })
   })

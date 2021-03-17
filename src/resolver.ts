@@ -7,6 +7,9 @@ import * as errors from './errors'
 interface ResolverOptions {
   registryAddress: string
   rpcUrl: string
+}
+
+interface ResolverConfig {
   fetch?: typeof nodeFetch
 }
 
@@ -17,7 +20,7 @@ export class Resolver {
   rpcUrl: string
   fetch: typeof nodeFetch | typeof fetch
 
-  constructor(options: ResolverOptions) {
+  constructor(options: ResolverOptions & ResolverConfig) {
     this.registryAddress = options.registryAddress
     this.rpcUrl = options.rpcUrl
     this.fetch = options.fetch ?? fetch
@@ -51,7 +54,7 @@ export class Resolver {
     [{ to: resolverAddress, data: '0x3b3b57de' + node.slice(2) }, 'latest']
   ).then(result => '0x' + result.slice(-40))
 
-  async addr(domain: string): Promise<string> {
+  public async addr(domain: string): Promise<string> {
     const node = namehash(domain)
 
     const resolverAddress = await this.getResolver(node)
@@ -65,4 +68,16 @@ export class Resolver {
 
     return addr
   }
+
+  public static forRskMainnet = (config: ResolverConfig) => new Resolver({
+    registryAddress: '0xcb868aeabd31e2b66f74e9a55cf064abb31a4ad5',
+    rpcUrl: 'https://public-node.rsk.co',
+    ...config
+  })
+
+  public static forRskTestnet = (config: ResolverConfig) => new Resolver({
+    registryAddress: '0x7d284aaac6e925aad802a53c0c69efe3764597b8',
+    rpcUrl: 'https://public-node.testnet.rsk.co',
+    ...config
+  })
 }
