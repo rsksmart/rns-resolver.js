@@ -38,25 +38,28 @@ export class Resolver {
       return result
     })
 
+  private getResolver = (node: string) => this.rpcRequest(
+    [{ to: this.registryAddress, data: '0x0178b8bf' + node.slice(2) }]
+  ).then(result => '0x' + result.slice(-40))
+
+  private supportsAddrInterface = (resolverAddress: string) => this.rpcRequest(
+    [{ to: resolverAddress, data: '0x01ffc9a73b3b57de00000000000000000000000000000000000000000000000000000000' }]
+  ).then(result => result !== '0x')
+
+  private getAddr = (resolverAddress: string, node: string) =>  this.rpcRequest(
+    [{ to: resolverAddress, data: '0x3b3b57de' + node.slice(2) }]
+  ).then(result => '0x' + result.slice(-40))
+
   async addr(domain: string): Promise<string> {
     const node = namehash(domain)
 
-    const resolverAddress = await this.rpcRequest(
-      [{ to: this.registryAddress, data: '0x0178b8bf' + node.slice(2) }]
-    ).then(result => '0x' + result.slice(-40))
-
+    const resolverAddress = await this.getResolver(node)
     if (resolverAddress === ZERO_ADDRESS) throw new Error('Domain has no resolver')
 
-    const supportsAddr = await this.rpcRequest(
-      [{ to: resolverAddress, data: '0x01ffc9a73b3b57de00000000000000000000000000000000000000000000000000000000' }]
-    ).then(result => result !== '0x')
-
+    const supportsAddr = await this.supportsAddrInterface(resolverAddress)
     if(!supportsAddr) throw new Error('Domain has no addr resolver')
 
-    const addr = await this.rpcRequest(
-      [{ to: resolverAddress, data: '0x3b3b57de' + node.slice(2) }]
-    ).then(result => '0x' + result.slice(-40))
-
+    const addr = await this.getAddr(resolverAddress, node)
     if(addr === ZERO_ADDRESS) throw new Error('Domain has no address set')
 
     return addr
