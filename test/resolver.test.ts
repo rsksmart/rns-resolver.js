@@ -1,9 +1,11 @@
 import Web3 from 'web3'
 import { Contract } from 'web3-eth-contract'
-import { AbiItem } from 'web3-utils'
+import { AbiItem, sha3 } from 'web3-utils'
 import RNS from '../build/contracts/RNS.json'
 import AddrResolver from '../build/contracts/ResolverV1.json'
 import Resolver from '../src'
+import { hash as namehash } from 'eth-ens-namehash'
+import nodeFetch from 'node-fetch'
 
 const deployRNS = async (web3: Web3): Promise<Contract> => {
   const contract = new web3.eth.Contract(RNS.abi as AbiItem[])
@@ -33,23 +35,42 @@ const deployResolver = async (web3: Web3): Promise<Contract> => {
   )
 }
 
-describe('resolver', () => {
+describe('resolver', function (this: {
+  rnsContract: Contract,
+  resolverContract: Contract,
+  txOptions: { from: string },
+  resolver: Resolver
+}) {
   beforeEach(async () => {
-    const web3 = new Web3('http://localhost:8545') // ganache
+    const rpcUrl = 'http://localhost:8545'
+    const web3 = new Web3(rpcUrl) // ganache
     const [from] = await web3.eth.getAccounts()
+    this.txOptions = { from }
     web3.eth.defaultAccount = from
 
-    const rnsContract = (await deployRNS(web3))
-    const resolverContract = (await deployResolver(web3))
+    this.rnsContract = (await deployRNS(web3))
+    this.resolverContract = (await deployResolver(web3))
 
-    await resolverContract.methods.initialize(rnsContract.options.address).send({ from })
+    await this.resolverContract.methods.initialize(this.rnsContract.options.address).send(this.txOptions)
 
-    expect(await resolverContract.methods.rns().call()).toEqual(rnsContract.options.address)
+    expect(await this.resolverContract.methods.rns().call()).toEqual(this.rnsContract.options.address)
+
+    this.resolver = new Resolver({
+      registryAddress: this.rnsContract.options.address,
+      rpcUrl,
+      fetch: nodeFetch
+    })
   })
 
-  test('fails if domain has no resolver', () => {
-    const resolver = new Resolver()
+  test('fails if domain has no resolver', async () => {
+    await expect(this.resolver.addr('test.rsk')).rejects.toThrowError('Domain has no resolver')
+  })
 
-    expect(resolver.addr('noresolver.testing2.rsk'))
+  test('fails if domain has non addr resolver', async () => {
+    await this.rnsContract.methods.setSubnodeOwner('0x00', sha3('rsk'), this.txOptions.from).send(this.txOptions)
+    await this.rnsContract.methods.setSubnodeOwner(namehash('rsk'), sha3('test'), this.txOptions.from).send(this.txOptions)
+    await this.rnsContract.methods.setResolver(namehash('test.rsk'), '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa').send(this.txOptions)
+
+    await expect(this.resolver.addr('test.rsk')).rejects.toThrowError('Domain has no addr resolver')
   })
 })
