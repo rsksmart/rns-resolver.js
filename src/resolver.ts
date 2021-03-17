@@ -41,6 +41,27 @@ export class Resolver {
       .then(result => '0x' + result.slice(-40))
 
     if (resolverAddress === '0x0000000000000000000000000000000000000000') throw new Error('Domain has no resolver')
-    throw new Error('Domain has no addr resolver')
+
+
+    const supportsAddr = await this.fetch(this.rpcUrl, {
+      method: 'post',
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'eth_call',
+        id: 666,
+        params: [{ to: resolverAddress, data: '0x01ffc9a73b3b57de00000000000000000000000000000000000000000000000000000000' }]
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    }).then((res: Response | NodeFetchResponse) => res.json())
+      .then(({ result, error, id }) => {
+        if (id !== 666) throw new Error('Invalid RPC response: id mismatch')
+        if (error) throw new Error('RPC Call error: ' + error)
+        return result
+      })
+      .then(result => result !== '0x')
+
+    if(!supportsAddr) throw new Error('Domain has no addr resolver')
+
+    throw new Error('Domain has no address set')
   }
 }
