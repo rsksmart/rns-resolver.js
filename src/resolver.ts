@@ -33,7 +33,8 @@ export class Resolver {
       }),
       headers: { 'Content-Type': 'application/json' },
     }).then((res: Response | NodeFetchResponse) => res.json())
-      .then(({ result, error }) => {
+      .then(({ result, error, id }) => {
+        if (id !== 666) throw new Error('Invalid RPC response: id mismatch')
         if (error) throw new Error('RPC Call error: ' + error)
         return result
       })
