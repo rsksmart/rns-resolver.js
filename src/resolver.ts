@@ -5,8 +5,8 @@ import nodeFetch, { Response as NodeFetchResponse } from 'node-fetch'
 import { toChecksumAddress } from 'crypto-addr-codec'
 import { ethCallFactory } from './rpc'
 import * as errors from './errors'
-import { RpcUrl } from './types'
-import { toAddress, toResolverData, supportsAddrData, toAddrData } from './abi'
+import { RpcUrl, EthCall } from './types'
+import { toAddress, toBoolean, toResolverData, supportsAddrData, toAddrData } from './abi'
 
 type RegistryAddress = string
 type AddrEncoder = (buff: Buffer) => string
@@ -27,7 +27,7 @@ export class Resolver {
   registryAddress: RegistryAddress
   addrEncoder: AddrEncoder
 
-  ethCall: (params: (string | { [key: string]: string })[]) => Promise<string>
+  ethCall: EthCall
 
   constructor(config: ResolverOptions & ResolverConfig) {
     this.registryAddress = config.registryAddress
@@ -37,15 +37,18 @@ export class Resolver {
   }
 
   private getResolver = (node: string) => this.ethCall(
-    [{ to: this.registryAddress, data: toResolverData(node) }, 'latest']
+    this.registryAddress,
+    toResolverData(node)
   ).then(toAddress)
 
   private supportsAddrInterface = (resolverAddress: string) => this.ethCall(
-    [{ to: resolverAddress, data: supportsAddrData }, 'latest']
-  ).then(result => (result !== '0x' && result !== '0x0000000000000000000000000000000000000000000000000000000000000000'))
+    resolverAddress,
+    supportsAddrData
+  ).then(toBoolean)
 
   private getAddr = (resolverAddress: string, node: string) =>  this.ethCall(
-    [{ to: resolverAddress, data: toAddrData(node) }, 'latest']
+    resolverAddress,
+    toAddrData(node)
   ).then(toAddress)
 
   public async addr(domain: string): Promise<string> {
