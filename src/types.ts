@@ -1,6 +1,7 @@
 import nodeFetch, { Response as NodeFetchResponse } from 'node-fetch'
 
 export type RpcUrl = string
+export type Address = string
 
 export type Fetch = typeof nodeFetch | typeof fetch
 export type FetchResponse = Response | NodeFetchResponse

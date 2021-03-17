@@ -13,6 +13,7 @@
     "test": "npx jest",
     "test:ci": "npx jest --coverage",
     "lint": "npx eslint src/ test/ --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "npx eslint src/ test/ --ext .js,.jsx,.ts,.tsx --fix",
     "lint:ci": "npx eslint src/ test/ --ext .js,.jsx,.ts,.tsx --format html --output-file ./coverage/eslint.html"
   },
   "repository": {
