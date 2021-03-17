@@ -6,6 +6,7 @@ import AddrResolver from '../build/contracts/ResolverV1.json'
 import Resolver from '../src'
 import { hash as namehash } from 'eth-ens-namehash'
 import nodeFetch from 'node-fetch'
+import * as errors from '../src/errors'
 
 const deployContract = async (web3: Web3, abi: AbiItem[], bytecode: string): Promise<Contract> => {
   const contract = new web3.eth.Contract(abi)
@@ -52,7 +53,7 @@ describe('resolver', function (this: {
   })
 
   test('fails if domain has no resolver', async () => {
-    await expect(this.resolver.addr('test.rsk')).rejects.toThrowError('Domain has no resolver')
+    await expect(this.resolver.addr('test.rsk')).rejects.toThrowError(errors.ERROR_NO_RESOLVER)
   })
 
   test('fails if domain has non addr resolver', async () => {
@@ -60,7 +61,7 @@ describe('resolver', function (this: {
     await this.rnsContract.methods.setSubnodeOwner(namehash('rsk'), sha3('test'), this.txOptions.from).send(this.txOptions)
     await this.rnsContract.methods.setResolver(namehash('test.rsk'), '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa').send(this.txOptions)
 
-    await expect(this.resolver.addr('test.rsk')).rejects.toThrowError('Domain has no addr resolver')
+    await expect(this.resolver.addr('test.rsk')).rejects.toThrowError(errors.ERROR_NOT_ADDR)
   })
 
   test('fails if domain has 0 address', async () => {
@@ -68,7 +69,7 @@ describe('resolver', function (this: {
     await this.rnsContract.methods.setSubnodeOwner(namehash('rsk'), sha3('test'), this.txOptions.from).send(this.txOptions)
     await this.rnsContract.methods.setResolver(namehash('test.rsk'), this.resolverContract.options.address).send(this.txOptions)
 
-    await expect(this.resolver.addr('test.rsk')).rejects.toThrowError('Domain has no address set')
+    await expect(this.resolver.addr('test.rsk')).rejects.toThrowError(errors.ERROR_NO_ADDR_SET)
   })
 
   test('returns domain address', async () => {
