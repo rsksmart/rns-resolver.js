@@ -2,11 +2,18 @@
 /// <reference path="index.d.ts"/>
 import { hash as namehash } from 'eth-ens-namehash'
 import nodeFetch, { Response as NodeFetchResponse } from 'node-fetch'
+import { toChecksumAddress } from 'crypto-addr-codec'
 import * as errors from './errors'
 
+type RegistryAddress = string
+type RpcUrl = string
+type AddrEncoder = (buff: Buffer) => string
+type Fetch = typeof nodeFetch | typeof fetch
+
 interface ResolverOptions {
-  registryAddress: string
-  rpcUrl: string
+  registryAddress: RegistryAddress
+  rpcUrl: RpcUrl
+  addrEncoder: AddrEncoder
 }
 
 interface ResolverConfig {
@@ -16,14 +23,16 @@ interface ResolverConfig {
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
 export class Resolver {
-  registryAddress: string
-  rpcUrl: string
-  fetch: typeof nodeFetch | typeof fetch
+  registryAddress: RegistryAddress
+  rpcUrl: RpcUrl
+  addrEncoder: AddrEncoder
+  fetch: Fetch
 
-  constructor(options: ResolverOptions & ResolverConfig) {
-    this.registryAddress = options.registryAddress
-    this.rpcUrl = options.rpcUrl
-    this.fetch = options.fetch ?? fetch
+  constructor(config: ResolverOptions & ResolverConfig) {
+    this.registryAddress = config.registryAddress
+    this.rpcUrl = config.rpcUrl
+    this.addrEncoder = config.addrEncoder
+    this.fetch = config.fetch ?? fetch
   }
 
   private ethCall = (params: (string | { [key: string]: string })[]) => this.fetch(this.rpcUrl, {
@@ -66,18 +75,20 @@ export class Resolver {
     const addr = await this.getAddr(resolverAddress, node)
     if(addr === ZERO_ADDRESS) throw new Error(errors.ERROR_NO_ADDR_SET)
 
-    return addr
+    return this.addrEncoder(Buffer.from(addr.slice(2), 'hex'))
   }
 
   public static forRskMainnet = (config: ResolverConfig) => new Resolver({
     registryAddress: '0xcb868aeabd31e2b66f74e9a55cf064abb31a4ad5',
     rpcUrl: 'https://public-node.rsk.co',
+    addrEncoder: (buff: Buffer) => toChecksumAddress(`0x${buff.toString('hex')}`, 30),
     ...config
   })
 
   public static forRskTestnet = (config: ResolverConfig) => new Resolver({
     registryAddress: '0x7d284aaac6e925aad802a53c0c69efe3764597b8',
     rpcUrl: 'https://public-node.testnet.rsk.co',
+    addrEncoder: (buff: Buffer) => toChecksumAddress(`0x${buff.toString('hex')}`, 31),
     ...config
   })
 }

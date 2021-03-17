@@ -48,6 +48,7 @@ describe('resolver', function (this: {
     this.resolver = new Resolver({
       registryAddress: this.rnsContract.options.address,
       rpcUrl,
+      addrEncoder: (buff: Buffer) => `0x${buff.toString('hex')}`,
       fetch: nodeFetch
     })
   })

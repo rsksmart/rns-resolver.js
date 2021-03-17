@@ -42,6 +42,7 @@
     "web3": "^1.2.9"
   },
   "dependencies": {
+    "crypto-addr-codec": "^0.1.7",
     "eth-ens-namehash": "^2.0.8"
   }
 }
