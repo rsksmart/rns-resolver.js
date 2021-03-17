@@ -70,4 +70,15 @@ describe('resolver', function (this: {
 
     await expect(this.resolver.addr('test.rsk')).rejects.toThrowError('Domain has no address set')
   })
+
+  test('returns domain address', async () => {
+    const addr = '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+
+    await this.rnsContract.methods.setSubnodeOwner('0x00', sha3('rsk'), this.txOptions.from).send(this.txOptions)
+    await this.rnsContract.methods.setSubnodeOwner(namehash('rsk'), sha3('test'), this.txOptions.from).send(this.txOptions)
+    await this.rnsContract.methods.setResolver(namehash('test.rsk'), this.resolverContract.options.address).send(this.txOptions)
+    await this.resolverContract.methods.setAddr(namehash('test.rsk'), addr).send(this.txOptions)
+
+    expect(await this.resolver.addr('test.rsk')).toEqual(addr)
+  })
 })

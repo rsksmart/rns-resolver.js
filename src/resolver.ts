@@ -9,6 +9,8 @@ interface ResolverOptions {
   fetch?: typeof nodeFetch
 }
 
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
+
 export class Resolver {
   registryAddress: string
   rpcUrl: string
@@ -43,7 +45,7 @@ export class Resolver {
       [{ to: this.registryAddress, data: '0x0178b8bf' + node.slice(2) }]
     ).then(result => '0x' + result.slice(-40))
 
-    if (resolverAddress === '0x0000000000000000000000000000000000000000') throw new Error('Domain has no resolver')
+    if (resolverAddress === ZERO_ADDRESS) throw new Error('Domain has no resolver')
 
     const supportsAddr = await this.rpcRequest(
       [{ to: resolverAddress, data: '0x01ffc9a73b3b57de00000000000000000000000000000000000000000000000000000000' }]
@@ -51,6 +53,12 @@ export class Resolver {
 
     if(!supportsAddr) throw new Error('Domain has no addr resolver')
 
-    throw new Error('Domain has no address set')
+    const addr = await this.rpcRequest(
+      [{ to: resolverAddress, data: '0x3b3b57de' + node.slice(2) }]
+    ).then(result => '0x' + result.slice(-40))
+
+    if(addr === ZERO_ADDRESS) throw new Error('Domain has no address set')
+
+    return addr
   }
 }
