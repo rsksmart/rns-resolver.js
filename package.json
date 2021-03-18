@@ -43,6 +43,7 @@
     "web3": "^1.2.9"
   },
   "dependencies": {
+    "@ensdomains/address-encoder": "^0.2.6",
     "crypto-addr-codec": "^0.1.7",
     "eth-ens-namehash": "^2.0.8"
   }

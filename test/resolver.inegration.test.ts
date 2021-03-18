@@ -11,7 +11,7 @@ describe('mainnet', function(this: {
     })
   })
 
-  test('valid rsk address', async () => {
+  test('valid RSK address', async () => {
     const addr = await this.resolver.addr('moneyonchain.rsk')
 
     expect(addr).toEqual('0x135601C736ddB4C58a4b8fd3CD9F66dF244d28AA')
@@ -19,16 +19,26 @@ describe('mainnet', function(this: {
 })
 
 describe('testnet', function(this: {
-  resolver: Resolver
+  resolver: Resolver,
+  testCoinAddr: (coinType: number, addr: string) => Promise<void>
 }) {
   beforeAll(() => {
     this.resolver = Resolver.forRskTestnet({
       fetch: nodeFetch
     })
+
+    this.testCoinAddr = async (coinType: number, expectedAddr: string) => {
+      expect(await this.resolver.addr('testing2.rsk', coinType)).toEqual(expectedAddr)
+    }
   })
 
   test('fails if domain has no resolver', () => expect(this.resolver.addr('noresolver.testing.rsk')).rejects.toThrowError(errors.ERROR_NO_RESOLVER))
   test('fails if domain has non addr resolver', () => expect(this.resolver.addr('noaddrresolver.testing.rsk')).rejects.toThrowError(errors.ERROR_NOT_ADDR))
   test('fails if domain has 0 address', () => expect(this.resolver.addr('noresolution.testing.rsk')).rejects.toThrowError(errors.ERROR_NO_ADDR_SET))
   test('returns domain address', async () => expect(await this.resolver.addr('june23.rsk')).toEqual('0x2824B21e348D520a50cDDfA77ba158822160DD94'))
+
+  test('valid BTC address', () => this.testCoinAddr(0, '1GhX38QTj34iHjv9gMPpTbb1xUyge9xptQ'))
+  test('valid NEM address', () => this.testCoinAddr(43, 'ND6ZPJL4HDASMJ72AZWRTUTOQLD7PFVFODZSBG6W'))
+  test('valid ETH address', () => this.testCoinAddr(60, '0xb2a03e995C98981013fefc5e40fB5a9dA326C230'))
+  test('valid RSK address', () => this.testCoinAddr(137, '0xc998ABBe862fCd4F834D35D4B91c5eF2811951b4'))
 })
