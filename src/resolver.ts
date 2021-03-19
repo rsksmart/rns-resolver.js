@@ -3,11 +3,12 @@
 import { hash as namehash } from 'eth-ens-namehash'
 import nodeFetch from 'node-fetch'
 import { toChecksumAddress } from 'crypto-addr-codec'
+import { formatsByCoinType } from '@ensdomains/address-encoder'
 import { ethCallFactory } from './rpc'
 import * as errors from './errors'
 import { RpcUrl, Address } from './types'
-import { AddrResolverContract, RegistryContract } from './contracts'
-import { ZERO_ADDRESS } from './constants'
+import { RegistryContract, AddrResolverContract, CoinAddrResolverContract } from './contracts'
+import { ZERO_ADDRESS, ZERO_BYTES } from './constants'
 
 type AddrEncoder = (buff: Buffer) => string
 
@@ -23,25 +24,22 @@ interface ResolverConfig {
 
 export class Resolver {
   registry: RegistryContract
-  resolverContractFactory: (address: Address) => AddrResolverContract
+  addrResolverContractFactory: (address: Address) => AddrResolverContract
+  coinAddrResolverContractFactory: (address: Address) => CoinAddrResolverContract
 
   addrEncoder: AddrEncoder
 
   constructor(config: ResolverOptions & ResolverConfig) {
     const ethCall = ethCallFactory(config.fetch ?? fetch, config.rpcUrl)
     this.registry = new RegistryContract(config.registryAddress, ethCall)
-    this.resolverContractFactory = (address: Address) => new AddrResolverContract(address, ethCall)
+    this.addrResolverContractFactory = (address: Address) => new AddrResolverContract(address, ethCall)
+    this.coinAddrResolverContractFactory = (address: Address) => new CoinAddrResolverContract(address, ethCall)
 
     this.addrEncoder = config.addrEncoder
   }
 
-  public async addr(domain: string): Promise<string> {
-    const node = namehash(domain)
-
-    const resolverAddress = await this.registry.getResolver(node)
-    if (resolverAddress === ZERO_ADDRESS) throw new Error(errors.ERROR_NO_RESOLVER)
-
-    const addrResolverContract = this.resolverContractFactory(resolverAddress)
+  private async _addr(resolverAddress: string, node: string): Promise<string> {
+    const addrResolverContract = this.addrResolverContractFactory(resolverAddress)
 
     const supportsAddr = await addrResolverContract.supportsAddrInterface(resolverAddress)
     if(!supportsAddr) throw new Error(errors.ERROR_NOT_ADDR)
@@ -50,6 +48,28 @@ export class Resolver {
     if(addr === ZERO_ADDRESS) throw new Error(errors.ERROR_NO_ADDR_SET)
 
     return this.addrEncoder(Buffer.from(addr.slice(2), 'hex'))
+  }
+
+  private async _coinAddr(resolverAddress: string, node: string, coinType: number): Promise<string> {
+    const coinAddrResolverContract = this.coinAddrResolverContractFactory(resolverAddress)
+
+    const supportsCoinAddr = await coinAddrResolverContract.supportsCoinAddrInterface(resolverAddress)
+    if(!supportsCoinAddr) throw new Error(errors.ERROR_NOT_COIN_ADDR)
+
+    const addr = await coinAddrResolverContract.getCoinAddr(resolverAddress, node, coinType)
+    if(addr === ZERO_BYTES) throw new Error(errors.ERROR_NO_COIN_ADDR_SET)
+
+    return formatsByCoinType[coinType].encoder(Buffer.from(addr, 'hex'))
+  }
+
+  public async addr(domain: string, coinType?: number): Promise<string> {
+    const node = namehash(domain)
+
+    const resolverAddress = await this.registry.getResolver(node)
+    if (resolverAddress === ZERO_ADDRESS) throw new Error(errors.ERROR_NO_RESOLVER)
+
+    if (!coinType && coinType !== 0) return await this._addr(resolverAddress, node)
+    return await this._coinAddr(resolverAddress, node, coinType)
   }
 
   public static forRskMainnet = (config: ResolverConfig): Resolver => new Resolver({
