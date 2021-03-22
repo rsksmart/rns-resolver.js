@@ -70,5 +70,5 @@
     "resolveJsonModule": true
   },
   "include": ["src"],
-  "exclude": ["lib"]
+  "exclude": ["lib", "dist"]
 }

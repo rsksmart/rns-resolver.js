@@ -9,12 +9,15 @@
   "scripts": {
     "ganache": "npx ganache-cli",
     "compile": "npx truffle compile",
-    "build": "npx tsc",
+    "build:tsc": "npx tsc",
+    "build:browserify": "npx browserify src/index.ts -p [ tsify --noImplicitAny ] -s RNSResolver > ./dist/bundle.js",
+    "build": "npm run build:tsc && npm run build:browserify",
     "test": "npx jest",
     "test:ci": "npx jest --coverage",
     "lint": "npx eslint src/ test/ --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "npx eslint src/ test/ --ext .js,.jsx,.ts,.tsx --fix",
-    "lint:ci": "npx eslint src/ test/ --ext .js,.jsx,.ts,.tsx --format html --output-file ./coverage/eslint.html"
+    "lint:ci": "npx eslint src/ test/ --ext .js,.jsx,.ts,.tsx --format html --output-file ./coverage/eslint.html",
+    "prepublishOnly": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -33,12 +36,14 @@
     "@types/jest": "^26.0.20",
     "@typescript-eslint/eslint-plugin": "^4.18.0",
     "@typescript-eslint/parser": "^4.18.0",
+    "browserify": "^17.0.0",
     "eslint": "^7.22.0",
     "ganache-cli": "^6.12.2",
     "jest": "^26.6.3",
     "node-fetch": "^2.6.1",
     "truffle": "^5.2.4",
     "ts-jest": "^26.5.3",
+    "tsify": "^5.0.2",
     "typescript": "^4.2.3",
     "web3": "^1.2.9"
   },
