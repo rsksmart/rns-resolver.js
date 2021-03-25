@@ -39,6 +39,7 @@ npm i @rsksmart/rns-resolver.js
 
 - Resolve RSK addresses
 - Resolve other coins addresses
+- Common JS, DOM, Node.js and React Native support
 
 ## Usage
 
@@ -54,6 +55,8 @@ resolver.addr('moneyonchain.rsk').then(console.log) // gets rsk address
 resolver.addr('multichain.testing.rsk', 1).then(console.log) // gets btc address
 // 1Ftu4C8VW18RkB8PZxXwwHocMLyEynLcrG
 ```
+
+Take a look at the [sample apps](https://github.com/rsksmart/rns-resolver.js-samples)!
 
 ### Usage with other networks
 
