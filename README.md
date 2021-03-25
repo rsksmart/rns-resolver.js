@@ -91,6 +91,35 @@ const resolver = new Resolver.forRskMainnet({
 })
 ```
 
+### Usage in React Native
+
+The resolver uses some Node.js modules that are not implemented by React Native. You need to fill the globals.
+
+1. Install the resolver
+
+  ```
+  yarn add @rsksmart/rns-resolver.js
+  ```
+
+2. It . Install them
+
+  ```
+  yarn add buffer big-integer
+  ```
+
+3. Add a `shim.js` file 
+
+  ```js
+  if (typeof Buffer === 'undefined') global.Buffer = require('buffer').Buffer
+  if (typeof BigInt === 'undefined') global.BigInt = require('big-integer')
+  ```
+
+4. Import `shim.js` from `index.js`
+
+  ```js
+  import './shim'
+  ```
+
 ## Develop
 
 Install dependencies:
