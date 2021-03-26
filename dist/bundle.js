@@ -11424,6 +11424,7 @@ var Resolver = /** @class */ (function () {
         this.registry = new contracts_1.RegistryContract(config.registryAddress, ethCall);
         this.addrResolverContractFactory = function (address) { return new contracts_1.AddrResolverContract(address, ethCall); };
         this.coinAddrResolverContractFactory = function (address) { return new contracts_1.CoinAddrResolverContract(address, ethCall); };
+        this.defaultCoinType = config.defaultCoinType;
         this.addrEncoder = config.addrEncoder;
     }
     Resolver.prototype._addr = function (resolverAddress, node) {
@@ -11482,7 +11483,7 @@ var Resolver = /** @class */ (function () {
                         resolverAddress = _a.sent();
                         if (resolverAddress === constants_1.ZERO_ADDRESS)
                             throw new Error(errors.ERROR_NO_RESOLVER);
-                        if (!(!coinType && coinType !== 0)) return [3 /*break*/, 3];
+                        if (!(!coinType && coinType !== 0 || coinType === this.defaultCoinType)) return [3 /*break*/, 3];
                         return [4 /*yield*/, this._addr(resolverAddress, node)];
                     case 2: return [2 /*return*/, _a.sent()];
                     case 3: return [4 /*yield*/, this._coinAddr(resolverAddress, node, coinType)];
@@ -11491,8 +11492,8 @@ var Resolver = /** @class */ (function () {
             });
         });
     };
-    Resolver.forRskMainnet = function (config) { return new Resolver(__assign({ registryAddress: '0xcb868aeabd31e2b66f74e9a55cf064abb31a4ad5', rpcUrl: 'https://public-node.rsk.co', addrEncoder: function (buff) { return crypto_addr_codec_1.toChecksumAddress("0x" + buff.toString('hex'), 30); } }, config)); };
-    Resolver.forRskTestnet = function (config) { return new Resolver(__assign({ registryAddress: '0x7d284aaac6e925aad802a53c0c69efe3764597b8', rpcUrl: 'https://public-node.testnet.rsk.co', addrEncoder: function (buff) { return crypto_addr_codec_1.toChecksumAddress("0x" + buff.toString('hex'), 31); } }, config)); };
+    Resolver.forRskMainnet = function (config) { return new Resolver(__assign({ registryAddress: '0xcb868aeabd31e2b66f74e9a55cf064abb31a4ad5', rpcUrl: 'https://public-node.rsk.co', addrEncoder: function (buff) { return crypto_addr_codec_1.toChecksumAddress("0x" + buff.toString('hex'), 30); }, defaultCoinType: 137 }, config)); };
+    Resolver.forRskTestnet = function (config) { return new Resolver(__assign({ registryAddress: '0x7d284aaac6e925aad802a53c0c69efe3764597b8', rpcUrl: 'https://public-node.testnet.rsk.co', addrEncoder: function (buff) { return crypto_addr_codec_1.toChecksumAddress("0x" + buff.toString('hex'), 31); }, defaultCoinType: 137 }, config)); };
     return Resolver;
 }());
 exports.Resolver = Resolver;
