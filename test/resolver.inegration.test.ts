@@ -40,5 +40,5 @@ describe('testnet', function(this: {
   test('valid BTC address', () => this.testCoinAddr(0, '1GhX38QTj34iHjv9gMPpTbb1xUyge9xptQ'))
   test('valid NEM address', () => this.testCoinAddr(43, 'ND6ZPJL4HDASMJ72AZWRTUTOQLD7PFVFODZSBG6W'))
   test('valid ETH address', () => this.testCoinAddr(60, '0xb2a03e995C98981013fefc5e40fB5a9dA326C230'))
-  test('valid RSK address', () => this.testCoinAddr(137, '0xc998ABBe862fCd4F834D35D4B91c5eF2811951b4'))
+  test('valid RSK address', () => this.testCoinAddr(137, '0xC998abBE862fcd4f834d35D4b91C5ef2811951b4'))
 })

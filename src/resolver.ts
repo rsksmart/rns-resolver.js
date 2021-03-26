@@ -16,6 +16,7 @@ interface ResolverOptions {
   registryAddress: Address
   rpcUrl: RpcUrl
   addrEncoder: AddrEncoder
+  defaultCoinType: number
 }
 
 interface ResolverConfig {
@@ -26,6 +27,7 @@ export class Resolver {
   registry: RegistryContract
   addrResolverContractFactory: (address: Address) => AddrResolverContract
   coinAddrResolverContractFactory: (address: Address) => CoinAddrResolverContract
+  defaultCoinType: number
 
   addrEncoder: AddrEncoder
 
@@ -35,6 +37,7 @@ export class Resolver {
     this.addrResolverContractFactory = (address: Address) => new AddrResolverContract(address, ethCall)
     this.coinAddrResolverContractFactory = (address: Address) => new CoinAddrResolverContract(address, ethCall)
 
+    this.defaultCoinType = config.defaultCoinType
     this.addrEncoder = config.addrEncoder
   }
 
@@ -68,7 +71,7 @@ export class Resolver {
     const resolverAddress = await this.registry.getResolver(node)
     if (resolverAddress === ZERO_ADDRESS) throw new Error(errors.ERROR_NO_RESOLVER)
 
-    if (!coinType && coinType !== 0) return await this._addr(resolverAddress, node)
+    if (!coinType && coinType !== 0 || coinType === this.defaultCoinType) return await this._addr(resolverAddress, node)
     return await this._coinAddr(resolverAddress, node, coinType)
   }
 
@@ -76,6 +79,7 @@ export class Resolver {
     registryAddress: '0xcb868aeabd31e2b66f74e9a55cf064abb31a4ad5',
     rpcUrl: 'https://public-node.rsk.co',
     addrEncoder: (buff: Buffer) => toChecksumAddress(`0x${buff.toString('hex')}`, 30),
+    defaultCoinType: 137,
     ...config
   })
 
@@ -83,6 +87,7 @@ export class Resolver {
     registryAddress: '0x7d284aaac6e925aad802a53c0c69efe3764597b8',
     rpcUrl: 'https://public-node.testnet.rsk.co',
     addrEncoder: (buff: Buffer) => toChecksumAddress(`0x${buff.toString('hex')}`, 31),
+    defaultCoinType: 137,
     ...config
   })
 }
