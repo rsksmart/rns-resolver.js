@@ -4,6 +4,7 @@ import { AbiItem, sha3 } from 'web3-utils'
 import { hash as namehash } from 'eth-ens-namehash'
 import nodeFetch from 'node-fetch'
 import { formatsByCoinType } from '@ensdomains/address-encoder'
+import { toChecksumAddress } from 'crypto-addr-codec'
 import RNS from '../build/contracts/RNS.json'
 import AddrResolver from '../build/contracts/ResolverV1.json'
 import PublicResolver from '../build/contracts/PublicResolver.json'
@@ -53,7 +54,8 @@ describe('resolver', function (this: {
     this.resolver = new Resolver({
       registryAddress: this.rnsContract.options.address,
       rpcUrl,
-      addrEncoder: (buff: Buffer) => `0x${buff.toString('hex')}`,
+      defaultCoinType: 137,
+      addrEncoder: (buff: Buffer) => toChecksumAddress(`0x${buff.toString('hex')}`, 30),
       fetch: nodeFetch
     })
 
@@ -91,12 +93,12 @@ describe('resolver', function (this: {
     })
 
     test('returns domain address', async () => {
-      const addr = '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+      const addr = '0xBbBbbbBbBBBBBBbBbbbbBbbBbBBbBBBbbBBbBBBb'
 
       await this.rnsContract.methods.setSubnodeOwner('0x00', sha3('rsk'), this.txOptions.from).send(this.txOptions)
       await this.rnsContract.methods.setSubnodeOwner(namehash('rsk'), sha3('test'), this.txOptions.from).send(this.txOptions)
       await this.rnsContract.methods.setResolver(namehash('test.rsk'), this.resolverContract.options.address).send(this.txOptions)
-      await this.resolverContract.methods.setAddr(namehash('test.rsk'), addr).send(this.txOptions)
+      await this.resolverContract.methods.setAddr(namehash('test.rsk'), addr.toLowerCase()).send(this.txOptions)
 
       expect(await this.resolver.addr('test.rsk')).toEqual(addr)
     })
@@ -130,5 +132,18 @@ describe('resolver', function (this: {
     test('returns domain NEM address', () => this.testCoinAddr(43, 'ND6ZPJL4HDASMJ72AZWRTUTOQLD7PFVFODZSBG6W'))
     test('returns domain ETH address', () => this.testCoinAddr(60, '0xE72F79190BC8f92067C6A62008656c6a9077F6AA'))
     test('returns domain RSK address', () => this.testCoinAddr(137, '0xC2a41f76CaCFa933c3496977f2160944EF8c2de3'))
+
+    test('domain has addr and no coin addr, but default coin addr is requested', async () => {
+      const publicResolver = await deployLegacyResolver(this.web3, this.rnsContract.options.address) // has addr but no coin addr
+
+      const addr = '0xBbBbbbBbBBBBBBbBbbbbBbbBbBBbBBBbbBBbBBBb'
+
+      await this.rnsContract.methods.setSubnodeOwner('0x00', sha3('rsk'), this.txOptions.from).send(this.txOptions)
+      await this.rnsContract.methods.setSubnodeOwner(namehash('rsk'), sha3('test'), this.txOptions.from).send(this.txOptions)
+      await this.rnsContract.methods.setResolver(namehash('test.rsk'), publicResolver.options.address).send(this.txOptions)
+      await publicResolver.methods.setAddr(namehash('test.rsk'), addr.toLowerCase()).send(this.txOptions)
+
+      await expect(await this.resolver.addr('test.rsk', 137)).toEqual(addr)
+    })
   })
 })
