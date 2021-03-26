@@ -52,7 +52,7 @@ resolver.addr('moneyonchain.rsk').then(console.log) // gets rsk address
 // 0x135601C736ddB4C58a4b8fd3CD9F66dF244d28AA
 
 
-resolver.addr('multichain.testing.rsk', 1).then(console.log) // gets btc address
+resolver.addr('multichain.testing.rsk', 0).then(console.log) // gets btc address
 // 1Ftu4C8VW18RkB8PZxXwwHocMLyEynLcrG
 ```
 
