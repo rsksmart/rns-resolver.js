@@ -122,6 +122,13 @@ The resolver uses some Node.js modules that are not implemented by React Native.
   ```js
   import './shim'
   ```
+  
+## Integrations references
+
+| Wallet | Type | PR |
+| - | - | - |
+| Edge | Mobile wallet (React Native) | [EdgeApp/edge-react-gui#2505](https://github.com/EdgeApp/edge-react-gui/pull/2505) |
+| rWallet | Mobile wallet (React Native) | [rsksmart/rwallet/#652](https://github.com/rsksmart/rwallet/pull/652) |
 
 ## Develop
 
