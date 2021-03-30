@@ -17,8 +17,8 @@ describe('mainnet', function(this: {
     expect(addr).toEqual('0x135601C736ddB4C58a4b8fd3CD9F66dF244d28AA')
   })
 
-  test('valid RSK address', async () => {
-    const addr = await this.resolver.addr('riverplate.rsk')
+  test('valid RSK address with coin type and no coin addr resolver', async () => {
+    const addr = await this.resolver.addr('riverplate.rsk', 137)
 
     expect(addr).toEqual('0x9D4969d06411D3B319f7204b71000cF874165Bb0')
   })
