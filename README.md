@@ -129,6 +129,8 @@ The resolver uses some Node.js modules that are not implemented by React Native.
 | - | - | - |
 | Edge | Mobile wallet (React Native) | [EdgeApp/edge-react-gui#2505](https://github.com/EdgeApp/edge-react-gui/pull/2505) |
 | rWallet | Mobile wallet (React Native) | [rsksmart/rwallet/#652](https://github.com/rsksmart/rwallet/pull/652) |
+| RIF Material UI | UI Kit (React Web) | [rsksmart/rif-material-ui#5](https://github.com/rsksmart/rif-material-ui/pull/5) |
+
 
 ## Develop
 
