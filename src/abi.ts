@@ -13,8 +13,8 @@ export const toNameData = (node: string): string => GET_NAME_METHOD_SIG + stripH
 // result decoders
 export const toAddress = (result: string): string => '0x' + result.slice(-40)
 export const toBoolean = (result: string): boolean => (result !== '0x' && result !== '0x0000000000000000000000000000000000000000000000000000000000000000')
-export const toBytes = (result: string) => result.slice(130, 130 + parseInt(result.slice(66, 130), 16) * 2)
-export const toString = (result: string) => {
+export const toBytes = (result: string): string => result.slice(130, 130 + parseInt(result.slice(66, 130), 16) * 2)
+export const toString = (result: string): string => {
   const hex = toBytes(result)
   let str = ''
   for(let i = 0; i < hex.length; i += 2)

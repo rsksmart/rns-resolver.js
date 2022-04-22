@@ -48,7 +48,7 @@ export class NameResolverContract extends BaseContract {
     supportsNameData
   ).then(toBoolean)
 
-  public getName = (node: string) => this.ethCall(
+  public getName = (node: string): Promise<string> => this.ethCall(
     this.address,
     toNameData(node)
   ).then(toString)

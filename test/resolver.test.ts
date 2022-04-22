@@ -19,6 +19,7 @@ import Resolver from '../src'
 import * as errors from '../src/errors'
 import { getReverseRecord } from '../src/reverse'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const deployContract = async (web3: Web3, abi: AbiItem[], bytecode: string, args?: any[]): Promise<Contract> => {
   const contract = new web3.eth.Contract(abi)
   const deployer = contract.deploy({ data: bytecode, arguments: args })
