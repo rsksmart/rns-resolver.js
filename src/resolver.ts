@@ -7,8 +7,9 @@ import { formatsByCoinType } from '@ensdomains/address-encoder'
 import { ethCallFactory } from './rpc'
 import * as errors from './errors'
 import { RpcUrl, Address } from './types'
-import { RegistryContract, AddrResolverContract, CoinAddrResolverContract } from './contracts'
+import { RegistryContract, AddrResolverContract, CoinAddrResolverContract, NameResolverContract } from './contracts'
 import { ZERO_ADDRESS, ZERO_BYTES } from './constants'
+import { getReverseRecord } from './reverse'
 
 type AddrEncoder = (buff: Buffer) => string
 
@@ -27,6 +28,7 @@ export class Resolver {
   registry: RegistryContract
   addrResolverContractFactory: (address: Address) => AddrResolverContract
   coinAddrResolverContractFactory: (address: Address) => CoinAddrResolverContract
+  nameResolverContractFactory: (address: Address) => NameResolverContract
   defaultCoinType: number
 
   addrEncoder: AddrEncoder
@@ -36,6 +38,7 @@ export class Resolver {
     this.registry = new RegistryContract(config.registryAddress, ethCall)
     this.addrResolverContractFactory = (address: Address) => new AddrResolverContract(address, ethCall)
     this.coinAddrResolverContractFactory = (address: Address) => new CoinAddrResolverContract(address, ethCall)
+    this.nameResolverContractFactory = (address: Address) => new NameResolverContract(address, ethCall)
 
     this.defaultCoinType = config.defaultCoinType
     this.addrEncoder = config.addrEncoder
@@ -76,10 +79,15 @@ export class Resolver {
   }
 
   public async reverse(address: string): Promise<string> {
-    const reverseRecord = namehash(`${address.slice(2)}.addr.reverse`)
+    const reverseRecord = getReverseRecord(address)
 
     const resolverAddress = await this.registry.getResolver(reverseRecord)
     if (resolverAddress == ZERO_ADDRESS) throw new Error(errors.ERROR_NO_REVERSE_RECORD)
+
+    const nameResolverContract = this.nameResolverContractFactory(resolverAddress)
+
+    const supportsName = await nameResolverContract.supportsNameResolverInterface()
+    if(!supportsName) throw new Error(errors.ERROR_NOT_NAME_RESOLVER)
 
     return ''
   }

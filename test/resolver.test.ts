@@ -17,6 +17,7 @@ import NameResolver from '../build/contracts/NameResolver.json'
 import Resolver from '../src'
 
 import * as errors from '../src/errors'
+import { getReverseRecord } from '../src/reverse'
 
 const deployContract = async (web3: Web3, abi: AbiItem[], bytecode: string, args?: any[]): Promise<Contract> => {
   const contract = new web3.eth.Contract(abi)
@@ -68,8 +69,8 @@ describe('resolver', function (this: {
 
     await this.rnsContract.methods.setSubnodeOwner('0x00', sha3('reverse'), this.txOptions.from).send(this.txOptions)
     await this.rnsContract.methods.setSubnodeOwner(namehash('reverse'), sha3('addr'), this.txOptions.from).send(this.txOptions)
-    await this.rnsContract.methods.setResolver(namehash('addr.reverse'), nameResolverContract.options.address)
-    await this.rnsContract.methods.setSubnodeOwner('0x00', sha3('addr'), this.reverseRegistrarContract.options.address).send(this.txOptions)
+    await this.rnsContract.methods.setResolver(namehash('addr.reverse'), nameResolverContract.options.address).send(this.txOptions)
+    await this.rnsContract.methods.setOwner(namehash('addr.reverse'), this.reverseRegistrarContract.options.address).send(this.txOptions)
 
     this.resolver = new Resolver({
       registryAddress: this.rnsContract.options.address,
@@ -174,6 +175,12 @@ describe('resolver', function (this: {
     })
 
     test('fails if address has no name resolver in reverse record', async () => {
+      await this.reverseRegistrarContract.methods.claim(this.txOptions.from).send(this.txOptions)
+      await this.rnsContract.methods.setResolver(getReverseRecord(this.txOptions.from), this.resolverContract.options.address).send(this.txOptions)
+      await expect(this.resolver.reverse(this.txOptions.from)).rejects.toThrow(errors.ERROR_NOT_NAME_RESOLVER)
+    })
+
+    test('fails if name is empty string', async () => {
       expect(false).toBeTruthy()
     })
 

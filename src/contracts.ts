@@ -1,5 +1,5 @@
 import { Address, EthCall } from './types'
-import { toResolverData, toAddress, supportsAddrData, supportsCoinAddrData, toBoolean, toBytes, toAddrData, toCoinAddrData } from './abi'
+import { toResolverData, toAddress, supportsAddrData, supportsCoinAddrData, toBoolean, toBytes, toAddrData, toCoinAddrData, supportsNameData } from './abi'
 
 class BaseContract {
   address: Address
@@ -40,4 +40,11 @@ export class CoinAddrResolverContract extends BaseContract {
     resolverAddress,
     toCoinAddrData(node, coinType)
   ).then(toBytes)
+}
+
+export class NameResolverContract extends BaseContract {
+  public supportsNameResolverInterface = (): Promise<boolean> => this.ethCall(
+    this.address,
+    supportsNameData
+  ).then(toBoolean)
 }
