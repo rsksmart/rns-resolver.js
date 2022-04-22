@@ -75,6 +75,15 @@ export class Resolver {
     return await this._coinAddr(resolverAddress, node, coinType)
   }
 
+  public async reverse(address: string): Promise<string> {
+    const reverseRecord = namehash(`${address.slice(2)}.addr.reverse`)
+
+    const resolverAddress = await this.registry.getResolver(reverseRecord)
+    if (resolverAddress == ZERO_ADDRESS) throw new Error(errors.ERROR_NO_REVERSE_RECORD)
+
+    return ''
+  }
+
   public static forRskMainnet = (config: ResolverConfig): Resolver => new Resolver({
     registryAddress: '0xcb868aeabd31e2b66f74e9a55cf064abb31a4ad5',
     rpcUrl: 'https://public-node.rsk.co',
