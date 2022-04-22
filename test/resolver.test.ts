@@ -181,7 +181,9 @@ describe('resolver', function (this: {
     })
 
     test('fails if name is empty string', async () => {
-      expect(false).toBeTruthy()
+      await this.reverseRegistrarContract.methods.setName('').send(this.txOptions)
+
+      await expect(this.resolver.reverse(this.txOptions.from)).rejects.toThrow(errors.ERROR_NO_NAME_SET)
     })
 
     test('returns domain for an address', async () => {

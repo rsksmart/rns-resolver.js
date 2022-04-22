@@ -89,6 +89,9 @@ export class Resolver {
     const supportsName = await nameResolverContract.supportsNameResolverInterface()
     if(!supportsName) throw new Error(errors.ERROR_NOT_NAME_RESOLVER)
 
+    const name = await nameResolverContract.getName(reverseRecord)
+    if (!name) throw new Error(errors.ERROR_NO_NAME_SET)
+
     return ''
   }
 
