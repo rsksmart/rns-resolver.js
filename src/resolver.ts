@@ -47,10 +47,10 @@ export class Resolver {
   private async _addr(resolverAddress: string, node: string): Promise<string> {
     const addrResolverContract = this.addrResolverContractFactory(resolverAddress)
 
-    const supportsAddr = await addrResolverContract.supportsAddrInterface(resolverAddress)
+    const supportsAddr = await addrResolverContract.isInterfaceSupported()
     if(!supportsAddr) throw new Error(errors.ERROR_NOT_ADDR)
 
-    const addr = await addrResolverContract.getAddr(resolverAddress, node)
+    const addr = await addrResolverContract.getAddr(node)
     if(addr === ZERO_ADDRESS) throw new Error(errors.ERROR_NO_ADDR_SET)
 
     return this.addrEncoder(Buffer.from(addr.slice(2), 'hex'))
@@ -59,10 +59,10 @@ export class Resolver {
   private async _coinAddr(resolverAddress: string, node: string, coinType: number): Promise<string> {
     const coinAddrResolverContract = this.coinAddrResolverContractFactory(resolverAddress)
 
-    const supportsCoinAddr = await coinAddrResolverContract.supportsCoinAddrInterface(resolverAddress)
+    const supportsCoinAddr = await coinAddrResolverContract.isInterfaceSupported()
     if(!supportsCoinAddr) throw new Error(errors.ERROR_NOT_COIN_ADDR)
 
-    const addr = await coinAddrResolverContract.getCoinAddr(resolverAddress, node, coinType)
+    const addr = await coinAddrResolverContract.getCoinAddr(node, coinType)
     if(addr === ZERO_BYTES) throw new Error(errors.ERROR_NO_COIN_ADDR_SET)
 
     return formatsByCoinType[coinType].encoder(Buffer.from(addr, 'hex'))
@@ -86,7 +86,7 @@ export class Resolver {
 
     const nameResolverContract = this.nameResolverContractFactory(resolverAddress)
 
-    const supportsName = await nameResolverContract.supportsNameResolverInterface()
+    const supportsName = await nameResolverContract.isInterfaceSupported()
     if(!supportsName) throw new Error(errors.ERROR_NOT_NAME_RESOLVER)
 
     const name = await nameResolverContract.getName(reverseRecord)
