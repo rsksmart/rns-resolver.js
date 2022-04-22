@@ -1,6 +1,6 @@
 {
   "name": "@rsksmart/rns-resolver.js",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "RNS Resolver",
   "main": "lib/index.js",
   "files": [
