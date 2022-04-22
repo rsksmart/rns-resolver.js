@@ -187,7 +187,9 @@ describe('resolver', function (this: {
     })
 
     test('returns domain for an address', async () => {
-      expect(false).toBeTruthy()
+      await this.reverseRegistrarContract.methods.setName('test.rsk').send({ ...this.txOptions, gas: 1000000 })
+
+      expect(await this.resolver.reverse(this.txOptions.from)).toEqual('test.rsk')
     })
   })
 })

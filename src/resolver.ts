@@ -92,7 +92,7 @@ export class Resolver {
     const name = await nameResolverContract.getName(reverseRecord)
     if (!name) throw new Error(errors.ERROR_NO_NAME_SET)
 
-    return ''
+    return name
   }
 
   public static forRskMainnet = (config: ResolverConfig): Resolver => new Resolver({
