@@ -55,8 +55,8 @@ resolver.addr('moneyonchain.rsk').then(console.log) // gets rsk address
 resolver.addr('multichain.testing.rsk', 0).then(console.log) // gets btc address
 // 1Ftu4C8VW18RkB8PZxXwwHocMLyEynLcrG
 
-resolver.reverse('testing.rsk').then(console.log) // gets address of a domain if reverse is set
-// 0xe9a4e6fae8217E032A08848E227d2b57D3E1e0A5
+resolver.reverse('0xe9a4e6fae8217E032A08848E227d2b57D3E1e0A5').then(console.log) // gets address of a domain if reverse is set
+// testing.rsk
 ```
 
 Take a look at the [sample apps](https://github.com/rsksmart/rns-resolver.js-samples)!
