@@ -5,12 +5,21 @@ import { hash as namehash } from 'eth-ens-namehash'
 import nodeFetch from 'node-fetch'
 import { formatsByCoinType } from '@ensdomains/address-encoder'
 import { toChecksumAddress } from 'crypto-addr-codec'
-import RNS from '../build/contracts/RNS.json'
-import AddrResolver from '../build/contracts/ResolverV1.json'
-import PublicResolver from '../build/contracts/PublicResolver.json'
-import Resolver from '../src'
-import * as errors from '../src/errors'
 
+import RNS from '../build/contracts/RNS.json'
+
+import AddrResolver from '../build/contracts/ResolverV1.json'
+
+import PublicResolver from '../build/contracts/PublicResolver.json'
+import ReverseRegistrar from '../build/contracts/ReverseRegistrar.json'
+
+import NameResolver from '../build/contracts/NameResolver.json'
+import Resolver from '../src'
+
+import * as errors from '../src/errors'
+import { getReverseRecord } from '../src/reverse'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const deployContract = async (web3: Web3, abi: AbiItem[], bytecode: string, args?: any[]): Promise<Contract> => {
   const contract = new web3.eth.Contract(abi)
   const deployer = contract.deploy({ data: bytecode, arguments: args })
@@ -26,13 +35,18 @@ const deployContract = async (web3: Web3, abi: AbiItem[], bytecode: string, args
 }
 
 const deployRNS = async (web3: Web3): Promise<Contract> => deployContract(web3, RNS.abi as AbiItem[], RNS.bytecode)
+
 const deployResolver = async (web3: Web3): Promise<Contract> => deployContract(web3, AddrResolver.abi as AbiItem[], AddrResolver.bytecode)
 const deployLegacyResolver = async (web3: Web3, registryAddress: string): Promise<Contract> => deployContract(web3, PublicResolver.abi as AbiItem[], PublicResolver.bytecode, [registryAddress])
+
+const deployReverseRegistrar = async (web3: Web3, registryAddress: string): Promise<Contract> => deployContract(web3, ReverseRegistrar.abi as AbiItem[], ReverseRegistrar.bytecode, [registryAddress])
+const deployNameResolver = async (web3: Web3, registryAddress: string): Promise<Contract> => deployContract(web3, NameResolver.abi as AbiItem[], NameResolver.bytecode, [registryAddress])
 
 describe('resolver', function (this: {
   web3: Web3,
   rnsContract: Contract,
   resolverContract: Contract,
+  reverseRegistrarContract: Contract,
   txOptions: { from: string },
   resolver: Resolver,
   testCoinAddr: (coinType: number, addr: string) => Promise<void>
@@ -50,6 +64,14 @@ describe('resolver', function (this: {
     await this.resolverContract.methods.initialize(this.rnsContract.options.address).send(this.txOptions)
 
     expect(await this.resolverContract.methods.rns().call()).toEqual(this.rnsContract.options.address)
+
+    this.reverseRegistrarContract = await deployReverseRegistrar(this.web3, this.rnsContract.options.address)
+    const nameResolverContract = await deployNameResolver(this.web3, this.rnsContract.options.address)
+
+    await this.rnsContract.methods.setSubnodeOwner('0x00', sha3('reverse'), this.txOptions.from).send(this.txOptions)
+    await this.rnsContract.methods.setSubnodeOwner(namehash('reverse'), sha3('addr'), this.txOptions.from).send(this.txOptions)
+    await this.rnsContract.methods.setResolver(namehash('addr.reverse'), nameResolverContract.options.address).send(this.txOptions)
+    await this.rnsContract.methods.setOwner(namehash('addr.reverse'), this.reverseRegistrarContract.options.address).send(this.txOptions)
 
     this.resolver = new Resolver({
       registryAddress: this.rnsContract.options.address,
@@ -144,6 +166,31 @@ describe('resolver', function (this: {
       await publicResolver.methods.setAddr(namehash('test.rsk'), addr.toLowerCase()).send(this.txOptions)
 
       await expect(await this.resolver.addr('test.rsk', 137)).toEqual(addr)
+    })
+  })
+
+  describe('reverse', () => {
+
+    test('fails if address has no reverse record', async () => {
+      await expect(this.resolver.reverse(this.txOptions.from)).rejects.toThrow(errors.ERROR_NO_REVERSE_RECORD)
+    })
+
+    test('fails if address has no name resolver in reverse record', async () => {
+      await this.reverseRegistrarContract.methods.claim(this.txOptions.from).send(this.txOptions)
+      await this.rnsContract.methods.setResolver(getReverseRecord(this.txOptions.from), this.resolverContract.options.address).send(this.txOptions)
+      await expect(this.resolver.reverse(this.txOptions.from)).rejects.toThrow(errors.ERROR_NOT_NAME_RESOLVER)
+    })
+
+    test('fails if name is empty string', async () => {
+      await this.reverseRegistrarContract.methods.setName('').send(this.txOptions)
+
+      await expect(this.resolver.reverse(this.txOptions.from)).rejects.toThrow(errors.ERROR_NO_NAME_SET)
+    })
+
+    test('returns domain for an address', async () => {
+      await this.reverseRegistrarContract.methods.setName('test.rsk').send({ ...this.txOptions, gas: 1000000 })
+
+      expect(await this.resolver.reverse(this.txOptions.from)).toEqual('test.rsk')
     })
   })
 })

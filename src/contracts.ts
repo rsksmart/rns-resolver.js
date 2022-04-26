@@ -1,5 +1,5 @@
 import { Address, EthCall } from './types'
-import { toResolverData, toAddress, supportsAddrData, supportsCoinAddrData, toBoolean, toBytes, toAddrData, toCoinAddrData } from './abi'
+import { toResolverData, toAddress, supportsAddrData, supportsCoinAddrData, toBoolean, toBytes, toAddrData, toCoinAddrData, supportsNameData, toNameData, toString } from './abi'
 
 class BaseContract {
   address: Address
@@ -11,6 +11,20 @@ class BaseContract {
   }
 }
 
+class EIP165Contract extends BaseContract {
+  interfaceId: string
+
+  constructor(address: Address, ethCall: EthCall, interfaceId: string) {
+    super(address, ethCall)
+    this.interfaceId = interfaceId
+  }
+
+  public isInterfaceSupported = (): Promise<boolean> => this.ethCall(
+    this.address,
+    this.interfaceId
+  ).then(toBoolean)
+}
+
 export class RegistryContract extends BaseContract {
   public getResolver = (node: string): Promise<string> => this.ethCall(
     this.address,
@@ -18,26 +32,35 @@ export class RegistryContract extends BaseContract {
   ).then(toAddress)
 }
 
-export class AddrResolverContract extends BaseContract {
-  public supportsAddrInterface = (resolverAddress: string): Promise<boolean> => this.ethCall(
-    resolverAddress,
-    supportsAddrData
-  ).then(toBoolean)
+export class AddrResolverContract extends EIP165Contract {
+  constructor(address: Address, ethCall: EthCall) {
+    super(address, ethCall, supportsAddrData)
+  }
 
-  public getAddr = (resolverAddress: string, node: string): Promise<string> =>  this.ethCall(
-    resolverAddress,
+  public getAddr = (node: string): Promise<string> =>  this.ethCall(
+    this.address,
     toAddrData(node)
   ).then(toAddress)
 }
 
-export class CoinAddrResolverContract extends BaseContract {
-  public supportsCoinAddrInterface = (resolverAddress: string): Promise<boolean> => this.ethCall(
-    resolverAddress,
-    supportsCoinAddrData
-  ).then(toBoolean)
+export class CoinAddrResolverContract extends EIP165Contract {
+  constructor(address: Address, ethCall: EthCall) {
+    super(address, ethCall, supportsCoinAddrData)
+  }
 
-  public getCoinAddr = (resolverAddress: string, node: string, coinType: number): Promise<string> =>  this.ethCall(
-    resolverAddress,
+  public getCoinAddr = (node: string, coinType: number): Promise<string> =>  this.ethCall(
+    this.address,
     toCoinAddrData(node, coinType)
   ).then(toBytes)
+}
+
+export class NameResolverContract extends EIP165Contract {
+  constructor(address: Address, ethCall: EthCall) {
+    super(address, ethCall, supportsNameData)
+  }
+
+  public getName = (node: string): Promise<string> => this.ethCall(
+    this.address,
+    toNameData(node)
+  ).then(toString)
 }

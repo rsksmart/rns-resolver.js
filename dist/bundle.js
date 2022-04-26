@@ -11235,26 +11235,45 @@ SafeBuffer.allocUnsafeSlow = function (size) {
 },{"../copy":30}],38:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.toBytes = exports.toBoolean = exports.toAddress = exports.toCoinAddrData = exports.toAddrData = exports.supportsCoinAddrData = exports.supportsAddrData = exports.toResolverData = void 0;
-var stripHexPrefix = function (hex) { return hex.slice(2); };
-// data encoders
-var toResolverData = function (node) { return '0x0178b8bf' + stripHexPrefix(node); };
-exports.toResolverData = toResolverData;
-exports.supportsAddrData = '0x01ffc9a73b3b57de00000000000000000000000000000000000000000000000000000000';
-exports.supportsCoinAddrData = '0x01ffc9a7f1cb7e0600000000000000000000000000000000000000000000000000000000';
-var toAddrData = function (node) { return '0x3b3b57de' + stripHexPrefix(node); };
-exports.toAddrData = toAddrData;
-var toCoinAddrData = function (node, coinType) { return '0xf1cb7e06' + stripHexPrefix(node) + coinType.toString(16).padStart(64, '0'); };
-exports.toCoinAddrData = toCoinAddrData;
-// result decoders
-var toAddress = function (result) { return '0x' + result.slice(-40); };
-exports.toAddress = toAddress;
+exports.toString = exports.toNameData = exports.supportsNameData = exports.toBytes = exports.toCoinAddrData = exports.supportsCoinAddrData = exports.toAddress = exports.toAddrData = exports.supportsAddrData = exports.toResolverData = exports.toBoolean = exports.supportsInterface = void 0;
+var hex_1 = require("./hex");
+// eip-165
+var supportsInterface = function (interfaceId) { return "0x01ffc9a7" + hex_1.stripHexPrefix(interfaceId) + "00000000000000000000000000000000000000000000000000000000"; };
+exports.supportsInterface = supportsInterface;
 var toBoolean = function (result) { return (result !== '0x' && result !== '0x0000000000000000000000000000000000000000000000000000000000000000'); };
 exports.toBoolean = toBoolean;
+// registry
+var toResolverData = function (node) { return '0x0178b8bf' + hex_1.stripHexPrefix(node); };
+exports.toResolverData = toResolverData;
+// addr
+var ADDR_METHOD_SIG = '0x3b3b57de';
+exports.supportsAddrData = exports.supportsInterface(ADDR_METHOD_SIG);
+var toAddrData = function (node) { return ADDR_METHOD_SIG + hex_1.stripHexPrefix(node); };
+exports.toAddrData = toAddrData;
+var toAddress = function (result) { return '0x' + result.slice(-40); };
+exports.toAddress = toAddress;
+// coin addr
+var COIN_ADDR_METHOD_SIG = '0xf1cb7e06';
+exports.supportsCoinAddrData = exports.supportsInterface(COIN_ADDR_METHOD_SIG);
+var toCoinAddrData = function (node, coinType) { return COIN_ADDR_METHOD_SIG + hex_1.stripHexPrefix(node) + coinType.toString(16).padStart(64, '0'); };
+exports.toCoinAddrData = toCoinAddrData;
 var toBytes = function (result) { return result.slice(130, 130 + parseInt(result.slice(66, 130), 16) * 2); };
 exports.toBytes = toBytes;
+// name
+var NAME_METHOD_SIG = '0x691f3431';
+exports.supportsNameData = exports.supportsInterface(NAME_METHOD_SIG);
+var toNameData = function (node) { return NAME_METHOD_SIG + hex_1.stripHexPrefix(node); };
+exports.toNameData = toNameData;
+var toString = function (result) {
+    var hex = exports.toBytes(result);
+    var str = '';
+    for (var i = 0; i < hex.length; i += 2)
+        str += String.fromCharCode(parseInt(hex[i] + hex[i + 1], 16));
+    return str;
+};
+exports.toString = toString;
 
-},{}],39:[function(require,module,exports){
+},{"./hex":42}],39:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ZERO_BYTES = exports.ZERO_ADDRESS = void 0;
@@ -11279,7 +11298,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CoinAddrResolverContract = exports.AddrResolverContract = exports.RegistryContract = void 0;
+exports.NameResolverContract = exports.CoinAddrResolverContract = exports.AddrResolverContract = exports.RegistryContract = void 0;
 var abi_1 = require("./abi");
 var BaseContract = /** @class */ (function () {
     function BaseContract(address, ethCall) {
@@ -11288,6 +11307,16 @@ var BaseContract = /** @class */ (function () {
     }
     return BaseContract;
 }());
+var EIP165Contract = /** @class */ (function (_super) {
+    __extends(EIP165Contract, _super);
+    function EIP165Contract(address, ethCall, interfaceId) {
+        var _this = _super.call(this, address, ethCall) || this;
+        _this.isInterfaceSupported = function () { return _this.ethCall(_this.address, _this.interfaceId).then(abi_1.toBoolean); };
+        _this.interfaceId = interfaceId;
+        return _this;
+    }
+    return EIP165Contract;
+}(BaseContract));
 var RegistryContract = /** @class */ (function (_super) {
     __extends(RegistryContract, _super);
     function RegistryContract() {
@@ -11300,44 +11329,62 @@ var RegistryContract = /** @class */ (function (_super) {
 exports.RegistryContract = RegistryContract;
 var AddrResolverContract = /** @class */ (function (_super) {
     __extends(AddrResolverContract, _super);
-    function AddrResolverContract() {
-        var _this = _super !== null && _super.apply(this, arguments) || this;
-        _this.supportsAddrInterface = function (resolverAddress) { return _this.ethCall(resolverAddress, abi_1.supportsAddrData).then(abi_1.toBoolean); };
-        _this.getAddr = function (resolverAddress, node) { return _this.ethCall(resolverAddress, abi_1.toAddrData(node)).then(abi_1.toAddress); };
+    function AddrResolverContract(address, ethCall) {
+        var _this = _super.call(this, address, ethCall, abi_1.supportsAddrData) || this;
+        _this.getAddr = function (node) { return _this.ethCall(_this.address, abi_1.toAddrData(node)).then(abi_1.toAddress); };
         return _this;
     }
     return AddrResolverContract;
-}(BaseContract));
+}(EIP165Contract));
 exports.AddrResolverContract = AddrResolverContract;
 var CoinAddrResolverContract = /** @class */ (function (_super) {
     __extends(CoinAddrResolverContract, _super);
-    function CoinAddrResolverContract() {
-        var _this = _super !== null && _super.apply(this, arguments) || this;
-        _this.supportsCoinAddrInterface = function (resolverAddress) { return _this.ethCall(resolverAddress, abi_1.supportsCoinAddrData).then(abi_1.toBoolean); };
-        _this.getCoinAddr = function (resolverAddress, node, coinType) { return _this.ethCall(resolverAddress, abi_1.toCoinAddrData(node, coinType)).then(abi_1.toBytes); };
+    function CoinAddrResolverContract(address, ethCall) {
+        var _this = _super.call(this, address, ethCall, abi_1.supportsCoinAddrData) || this;
+        _this.getCoinAddr = function (node, coinType) { return _this.ethCall(_this.address, abi_1.toCoinAddrData(node, coinType)).then(abi_1.toBytes); };
         return _this;
     }
     return CoinAddrResolverContract;
-}(BaseContract));
+}(EIP165Contract));
 exports.CoinAddrResolverContract = CoinAddrResolverContract;
+var NameResolverContract = /** @class */ (function (_super) {
+    __extends(NameResolverContract, _super);
+    function NameResolverContract(address, ethCall) {
+        var _this = _super.call(this, address, ethCall, abi_1.supportsNameData) || this;
+        _this.getName = function (node) { return _this.ethCall(_this.address, abi_1.toNameData(node)).then(abi_1.toString); };
+        return _this;
+    }
+    return NameResolverContract;
+}(EIP165Contract));
+exports.NameResolverContract = NameResolverContract;
 
 },{"./abi":38}],41:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ERROR_NO_COIN_ADDR_SET = exports.ERROR_NO_ADDR_SET = exports.ERROR_NOT_COIN_ADDR = exports.ERROR_NOT_ADDR = exports.ERROR_NO_RESOLVER = void 0;
+exports.ERROR_NO_NAME_SET = exports.ERROR_NOT_NAME_RESOLVER = exports.ERROR_NO_REVERSE_RECORD = exports.ERROR_NO_COIN_ADDR_SET = exports.ERROR_NO_ADDR_SET = exports.ERROR_NOT_COIN_ADDR = exports.ERROR_NOT_ADDR = exports.ERROR_NO_RESOLVER = void 0;
 exports.ERROR_NO_RESOLVER = 'Domain has no resolver';
 exports.ERROR_NOT_ADDR = 'Domain has no addr resolver';
 exports.ERROR_NOT_COIN_ADDR = 'Domain has no coin addr resolver';
 exports.ERROR_NO_ADDR_SET = 'Domain has no address set';
 exports.ERROR_NO_COIN_ADDR_SET = 'Domain has no coin address set';
+exports.ERROR_NO_REVERSE_RECORD = 'Address has no reverse record';
+exports.ERROR_NOT_NAME_RESOLVER = 'Reverse record has no name resolver';
+exports.ERROR_NO_NAME_SET = 'Reverse record has no name set';
 
 },{}],42:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.stripHexPrefix = void 0;
+var stripHexPrefix = function (hex) { return hex.slice(2); };
+exports.stripHexPrefix = stripHexPrefix;
+
+},{}],43:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var resolver_1 = require("./resolver");
 exports.default = resolver_1.Resolver;
 
-},{"./resolver":43}],43:[function(require,module,exports){
+},{"./resolver":44}],44:[function(require,module,exports){
 (function (Buffer){(function (){
 "use strict";
 var __assign = (this && this.__assign) || function () {
@@ -11417,6 +11464,7 @@ var rpc_1 = require("./rpc");
 var errors = __importStar(require("./errors"));
 var contracts_1 = require("./contracts");
 var constants_1 = require("./constants");
+var reverse_1 = require("./reverse");
 var Resolver = /** @class */ (function () {
     function Resolver(config) {
         var _a;
@@ -11424,6 +11472,7 @@ var Resolver = /** @class */ (function () {
         this.registry = new contracts_1.RegistryContract(config.registryAddress, ethCall);
         this.addrResolverContractFactory = function (address) { return new contracts_1.AddrResolverContract(address, ethCall); };
         this.coinAddrResolverContractFactory = function (address) { return new contracts_1.CoinAddrResolverContract(address, ethCall); };
+        this.nameResolverContractFactory = function (address) { return new contracts_1.NameResolverContract(address, ethCall); };
         this.defaultCoinType = config.defaultCoinType;
         this.addrEncoder = config.addrEncoder;
     }
@@ -11434,12 +11483,12 @@ var Resolver = /** @class */ (function () {
                 switch (_a.label) {
                     case 0:
                         addrResolverContract = this.addrResolverContractFactory(resolverAddress);
-                        return [4 /*yield*/, addrResolverContract.supportsAddrInterface(resolverAddress)];
+                        return [4 /*yield*/, addrResolverContract.isInterfaceSupported()];
                     case 1:
                         supportsAddr = _a.sent();
                         if (!supportsAddr)
                             throw new Error(errors.ERROR_NOT_ADDR);
-                        return [4 /*yield*/, addrResolverContract.getAddr(resolverAddress, node)];
+                        return [4 /*yield*/, addrResolverContract.getAddr(node)];
                     case 2:
                         addr = _a.sent();
                         if (addr === constants_1.ZERO_ADDRESS)
@@ -11456,12 +11505,12 @@ var Resolver = /** @class */ (function () {
                 switch (_a.label) {
                     case 0:
                         coinAddrResolverContract = this.coinAddrResolverContractFactory(resolverAddress);
-                        return [4 /*yield*/, coinAddrResolverContract.supportsCoinAddrInterface(resolverAddress)];
+                        return [4 /*yield*/, coinAddrResolverContract.isInterfaceSupported()];
                     case 1:
                         supportsCoinAddr = _a.sent();
                         if (!supportsCoinAddr)
                             throw new Error(errors.ERROR_NOT_COIN_ADDR);
-                        return [4 /*yield*/, coinAddrResolverContract.getCoinAddr(resolverAddress, node, coinType)];
+                        return [4 /*yield*/, coinAddrResolverContract.getCoinAddr(node, coinType)];
                     case 2:
                         addr = _a.sent();
                         if (addr === constants_1.ZERO_BYTES)
@@ -11492,6 +11541,34 @@ var Resolver = /** @class */ (function () {
             });
         });
     };
+    Resolver.prototype.reverse = function (address) {
+        return __awaiter(this, void 0, void 0, function () {
+            var reverseRecord, resolverAddress, nameResolverContract, supportsName, name;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        reverseRecord = reverse_1.getReverseRecord(address);
+                        return [4 /*yield*/, this.registry.getResolver(reverseRecord)];
+                    case 1:
+                        resolverAddress = _a.sent();
+                        if (resolverAddress == constants_1.ZERO_ADDRESS)
+                            throw new Error(errors.ERROR_NO_REVERSE_RECORD);
+                        nameResolverContract = this.nameResolverContractFactory(resolverAddress);
+                        return [4 /*yield*/, nameResolverContract.isInterfaceSupported()];
+                    case 2:
+                        supportsName = _a.sent();
+                        if (!supportsName)
+                            throw new Error(errors.ERROR_NOT_NAME_RESOLVER);
+                        return [4 /*yield*/, nameResolverContract.getName(reverseRecord)];
+                    case 3:
+                        name = _a.sent();
+                        if (!name)
+                            throw new Error(errors.ERROR_NO_NAME_SET);
+                        return [2 /*return*/, name];
+                }
+            });
+        });
+    };
     Resolver.forRskMainnet = function (config) { return new Resolver(__assign({ registryAddress: '0xcb868aeabd31e2b66f74e9a55cf064abb31a4ad5', rpcUrl: 'https://public-node.rsk.co', addrEncoder: function (buff) { return crypto_addr_codec_1.toChecksumAddress("0x" + buff.toString('hex'), 30); }, defaultCoinType: 137 }, config)); };
     Resolver.forRskTestnet = function (config) { return new Resolver(__assign({ registryAddress: '0x7d284aaac6e925aad802a53c0c69efe3764597b8', rpcUrl: 'https://public-node.testnet.rsk.co', addrEncoder: function (buff) { return crypto_addr_codec_1.toChecksumAddress("0x" + buff.toString('hex'), 31); }, defaultCoinType: 137 }, config)); };
     return Resolver;
@@ -11499,7 +11576,16 @@ var Resolver = /** @class */ (function () {
 exports.Resolver = Resolver;
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"./constants":39,"./contracts":40,"./errors":41,"./rpc":44,"@ensdomains/address-encoder":1,"buffer":12,"crypto-addr-codec":15,"eth-ens-namehash":17}],44:[function(require,module,exports){
+},{"./constants":39,"./contracts":40,"./errors":41,"./reverse":45,"./rpc":46,"@ensdomains/address-encoder":1,"buffer":12,"crypto-addr-codec":15,"eth-ens-namehash":17}],45:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getReverseRecord = void 0;
+var eth_ens_namehash_1 = require("eth-ens-namehash");
+var hex_1 = require("./hex");
+var getReverseRecord = function (address) { return eth_ens_namehash_1.hash(hex_1.stripHexPrefix(address) + ".addr.reverse"); };
+exports.getReverseRecord = getReverseRecord;
+
+},{"./hex":42,"eth-ens-namehash":17}],46:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ethCallFactory = void 0;
@@ -11523,5 +11609,5 @@ var ethCallFactory = function (fetch, rpcUrl) { return function (to, data) { ret
 }); }; };
 exports.ethCallFactory = ethCallFactory;
 
-},{}]},{},[42])(42)
+},{}]},{},[43])(43)
 });

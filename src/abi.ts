@@ -1,13 +1,32 @@
-const stripHexPrefix = (hex: string): string => hex.slice(2)
+import { stripHexPrefix } from './hex'
 
-// data encoders
-export const toResolverData = (node: string): string => '0x0178b8bf' + stripHexPrefix(node)
-export const supportsAddrData = '0x01ffc9a73b3b57de00000000000000000000000000000000000000000000000000000000'
-export const supportsCoinAddrData = '0x01ffc9a7f1cb7e0600000000000000000000000000000000000000000000000000000000'
-export const toAddrData = (node: string): string => '0x3b3b57de' + stripHexPrefix(node)
-export const toCoinAddrData = (node: string, coinType: number): string => '0xf1cb7e06' + stripHexPrefix(node) + coinType.toString(16).padStart(64, '0')
-
-// result decoders
-export const toAddress = (result: string): string => '0x' + result.slice(-40)
+// eip-165
+export const supportsInterface = (interfaceId: string): string => `0x01ffc9a7${stripHexPrefix(interfaceId)}00000000000000000000000000000000000000000000000000000000`
 export const toBoolean = (result: string): boolean => (result !== '0x' && result !== '0x0000000000000000000000000000000000000000000000000000000000000000')
-export const toBytes = (result: string) => result.slice(130, 130 + parseInt(result.slice(66, 130), 16) * 2)
+
+// registry
+export const toResolverData = (node: string): string => '0x0178b8bf' + stripHexPrefix(node)
+
+// addr
+const ADDR_METHOD_SIG = '0x3b3b57de'
+export const supportsAddrData = supportsInterface(ADDR_METHOD_SIG)
+export const toAddrData = (node: string): string => ADDR_METHOD_SIG + stripHexPrefix(node)
+export const toAddress = (result: string): string => '0x' + result.slice(-40)
+
+// coin addr
+const COIN_ADDR_METHOD_SIG = '0xf1cb7e06'
+export const supportsCoinAddrData = supportsInterface(COIN_ADDR_METHOD_SIG)
+export const toCoinAddrData = (node: string, coinType: number): string => COIN_ADDR_METHOD_SIG + stripHexPrefix(node) + coinType.toString(16).padStart(64, '0')
+export const toBytes = (result: string): string => result.slice(130, 130 + parseInt(result.slice(66, 130), 16) * 2)
+
+// name
+const NAME_METHOD_SIG = '0x691f3431'
+export const supportsNameData = supportsInterface(NAME_METHOD_SIG)
+export const toNameData = (node: string): string => NAME_METHOD_SIG + stripHexPrefix(node)
+export const toString = (result: string): string => {
+  const hex = toBytes(result)
+  let str = ''
+  for(let i = 0; i < hex.length; i += 2)
+    str += String.fromCharCode(parseInt(hex[i] + hex[i+1], 16));
+  return str
+}

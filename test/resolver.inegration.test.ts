@@ -47,4 +47,11 @@ describe('testnet', function(this: {
   test('valid NEM address', () => this.testCoinAddr(43, 'ND6ZPJL4HDASMJ72AZWRTUTOQLD7PFVFODZSBG6W'))
   test('valid ETH address', () => this.testCoinAddr(60, '0xb2a03e995C98981013fefc5e40fB5a9dA326C230'))
   test('valid RSK address', () => this.testCoinAddr(137, '0xC998abBE862fcd4f834d35D4b91C5ef2811951b4'))
+
+  describe('reverse', () => {
+    test('invalid reverse lookup', () => expect(this.resolver.reverse('0x0000000000000000000000000000000000000001')).rejects.toThrow(errors.ERROR_NO_REVERSE_RECORD))
+    test('invalid reverse lookup', () => expect(this.resolver.reverse('0x1c0884e81161B526f6A4baBC557F97649a2c74CC')).rejects.toThrow(errors.ERROR_NOT_NAME_RESOLVER))
+    test('invalid reverse lookup', () => expect(this.resolver.reverse('0x0BC10AFD0Fc8344Ac3bBDDEE72221F148Ee0Bc61')).rejects.toThrow(errors.ERROR_NO_NAME_SET))
+    test('valid reverse lookup', async () => expect(await this.resolver.reverse('0xe9a4e6fae8217E032A08848E227d2b57D3E1e0A5')).toEqual('testing.rsk'))
+  })
 })
