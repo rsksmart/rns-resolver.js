@@ -46,7 +46,7 @@ npm i @rsksmart/rns-resolver.js
 ```ts
 import Resolver from '@rsksmart/rns-resolver.js'
 
-const resolver = new Resolver.forRskMainnet()
+const resolver = Resolver.forRskMainnet()
 
 resolver.addr('moneyonchain.rsk').then(console.log) // gets rsk address
 // 0x135601C736ddB4C58a4b8fd3CD9F66dF244d28AA
